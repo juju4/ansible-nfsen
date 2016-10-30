@@ -3,8 +3,7 @@
 nfsen_php_timezone: 'UTC'
 #nfsen_version: nfsen-1.3.6p1
 nfsen_version: nfsen-1.3.7
-#nfsen_url: http://downloads.sourceforge.net/project/nfsen/stable/{{nfsen_version}}/{{nfsen_version}}.tar.gz
-nfsen_url: "http://downloads.sourceforge.net/project/nfsen/stable/{{nfsen_version}}/{{nfsen_version}}.tar.gz?r=&ts=1477095307&use_mirror=pilotfiber"
+nfsen_url: http://downloads.sourceforge.net/project/nfsen/stable/{{nfsen_version}}/{{nfsen_version}}.tar.gz
 nfsen_src_dir: /usr/local/src
 # defaults file for nfsen.conf
 nfsen_bindir: /usr/local/bin
