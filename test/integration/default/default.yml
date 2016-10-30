@@ -1,5 +1,9 @@
 ---
 
+## FIXME! travis/docker/centos7: 'ansible_default_ipv4' is undefined. https://github.com/ansible/ansible/issues/9260
+- hosts: all
+  tasks: []
+
 - hosts: all
 #- hosts: test-kitchen
   vars:
