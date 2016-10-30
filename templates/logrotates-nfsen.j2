@@ -1,0 +1,12 @@
+## /etc/logrotate.d/nfsen
+/var/log/nfsen.log {
+    rotate 14
+    daily
+    missingok
+    notifempty
+    delaycompress
+    compress
+    postrotate
+        invoke-rc.d rsyslog rotate > /dev/null
+    endscript
+}

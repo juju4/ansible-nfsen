@@ -1,0 +1,130 @@
+#!/bin/bash
+## from http://www.linuxscrew.com/2012/03/15/nfsen-traffic-classification-breakdown/
+
+nfsen="{{ nfsen_bindir }}/nfsen"
+remote=$1
+ips=$2
+group=$3
+#Sources="BComEdgeDE1-1"
+Sources="localhost"
+
+if [[ $1 == "" || $2 == "" || $3 == "" ]];then
+        exit
+fi
+
+## https://github.com/ansible/ansible/issues/16443
+{% raw %}
+$nfsen -a $group/$remote shadow=1
+dstfilter=""
+for dstip in $2;do
+        if ((${#dstfilter}>0));then
+                dstfilter=$dstfilter" or dst net "$dstip
+        else
+                dstfilter="(dst net "$dstip
+        fi
+done
+dstfilter=$dstfilter")"
+
+srcfilter=""
+for srcip in $2;do
+        if ((${#srcfilter}>0));then
+                srcfilter=$srcfilter" or src net "$srcip
+        else
+                srcfilter="(src net "$dstip
+        fi
+done
+srcfilter=$srcfilter")"
+
+colorcounter=0
+cat ./protocols.list | while read line;do
+        echo
+        echo
+        echo $line
+        let colorcounter++
+        currentcolor=$(head -n $colorcounter colors.list | tail -1)
+        dstportfilter=""
+        srcportfilter=""
+        otherdstportfilter=""
+        othersrcportfilter=""
+        serviceport=$(echo $line | awk -F '|' '{print$1}')
+        servicename=$(echo $line | awk -F '|' '{print$2}')
+        for line1 in $serviceport;do
+                if [[ -n $(echo $line1 | grep '-') ]];then
+                        #range
+                        port1=$(echo $line1 | awk -F '/' '{print$1}' | awk -F '-' '{print$1}')
+                        port2=$(echo $line1 | awk -F '/' '{print$1}' | awk -F '-' '{print$2}')
+                        proto=$(echo $line1 | awk -F '/' '{print$2}')
+                        let "port1n=port1-1"
+                        let "port2n=port2+1"
+                        if ((${#srcportfilter}>0));then
+                                srcportfilter=$srcportfilter" or (src port > $port1n and src port < $port2n and proto $proto)"
+                        else
+                                srcportfilter="(src port > $port1n and src port < $port2n and proto $proto)"
+                        fi
+                        if ((${#dstportfilter}>0));then
+                                dstportfilter=$dstportfilter" or (dst port > $port1n and dst port < $port2n and proto $proto)"
+                        else
+                                dstportfilter="(dst port > $port1n and dst port < $port2n and proto $proto)"
+                        fi
+                        #for other
+                        if ((${#othersrcportfilter}>0));then
+                                othersrcportfilter=$othersrcportfilter" and not (src port > $port1n and src port < $port2n and proto $proto)"
+                        else
+                                othersrcportfilter="not (src port > $port1n and src port < $port2n and proto $proto)"
+                        fi
+                        if ((${#otherdstportfilter}>0));then
+                                otherdstportfilter=$otherdstportfilter" and not (dst port > $port1n and dst port < $port2n and proto $proto)"
+                        else
+                                otherdstportfilter="not (dst port > $port1n and dst port < $port2n and proto $proto)"
+                        fi
+                else
+                        #norange
+                        port=$(echo $line1 | awk -F '/' '{print$1}')
+                        proto=$(echo $line1 | awk -F '/' '{print$2}')
+                        if ((${#srcportfilter}>0));then
+                                srcportfilter=$srcportfilter" or (src port $port and proto $proto)"
+                        else
+                                srcportfilter="(src port $port and proto $proto)"
+                        fi
+                        if ((${#dstportfilter}>0));then
+                                dstportfilter=$dstportfilter" or (dst port $port and proto $proto)"
+                        else
+                                dstportfilter="(dst port $port and proto $proto)"
+                        fi
+                        #for other
+                        if ((${#othersrcportfilter}>0));then
+                                othersrcportfilter=$othersrcportfilter" and not (src port $port and proto $proto)"
+                        else
+                                othersrcportfilter="not (src port $port and proto $proto)"
+                        fi
+                        if ((${#otherdstportfilter}>0));then
+                                otherdstportfilter=$otherdstportfilter" and not (dst port $port and proto $proto)"
+                        else
+                                otherdstportfilter="not (dst port $port and proto $proto)"
+                        fi
+                fi
+        done
+        $nfsen --add-channel $group/$remote/$servicename-in  sourcelist="$Sources" filter="$dstfilter and ($srcportfilter)" colour="$currentcolor" sign=+ order=$colorcounter
+        $nfsen --add-channel $group/$remote/$servicename-out sourcelist="$Sources" filter="$srcfilter and ($dstportfilter)" colour="$currentcolor" sign=- order=$colorcounter
+        otherdstportfilterall=$otherdstportfilterall" and ("$otherdstportfilter")"
+        othersrcportfilterall=$othersrcportfilterall" and ("$othersrcportfilter")"
+        echo $otherdstportfilterall > /tmp/otherdstportfilterall
+        echo $othersrcportfilterall > /tmp/othersrcportfilterall
+        echo $colorcounter > /tmp/colorcounter
+done
+
+if [[ -s /tmp/otherdstportfilterall && -s /tmp/othersrcportfilterall && -s /tmp/colorcounter ]];then
+        otherdstportfilterall=$(cat /tmp/otherdstportfilterall)
+        othersrcportfilterall=$(cat /tmp/othersrcportfilterall)
+        colorcounter=$(cat /tmp/colorcounter)
+        let colorcounter++
+        $nfsen --add-channel $group/$remote/other-in  sourcelist="$Sources" filter="$dstfilter $othersrcportfilterall" colour="#000000" sign=+ order=$colorcounter
+        $nfsen --add-channel $group/$remote/other-out sourcelist="$Sources" filter="$srcfilter $otherdstportfilterall" colour="#000000" sign=- order=$colorcounter
+fi
+rm -f /tmp/otherdstportfilterall
+rm -f /tmp/othersrcportfilterall
+rm -f /tmp/colorcounter
+{% endraw %}
+
+$nfsen --commit-profile $group/$remote
+

@@ -1,5 +1,7 @@
 ---
 apache_user: apache
+apache_svc: httpd
+
 nfsen_prereqs:
     - httpd
     - nfdump
@@ -12,3 +14,30 @@ nfsen_prereqs:
     - rrdtool
     - rrdtool-perl
     - patch
+    - wget
+
+php_ini: /etc/php.ini
+apache_conf: /etc/httpd/conf.d
+
+nfsen_sshcure_deps:
+  - perl-DBD-SQLite
+  - perl-JSON
+  - perl-libwww-perl
+  - perl-Net-IP
+
+nfsen_surfmap_deps:
+  - php
+  - php-common
+#  - php5-curl
+#  - php5-json
+#  - php5-mbstring
+#  - php5-sqlite
+  - sqlite
+
+nfsen_nfsight_deps:
+  - php-mysql
+  - perl-DBI
+  - libdbi-dbd-mysql
+  - perl-Number-Format
+#  - picviz
+

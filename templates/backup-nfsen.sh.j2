@@ -1,0 +1,21 @@
+#!/bin/sh
+## backup script for nfsen
+
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+umask 022
+
+date=`date +%Y-%m-%d`
+dest={{ backupdir }}
+[ ! -d "$dest" ] && install -d -m 0700 -o root "$dest"
+destfile=$dest/backup-nfsen-$date.tar.gz
+
+## nfcapd data by nfsen are in {{ nfsen_vardir }}/profiles-data/live/*/
+dirs="{{ nfsen_vardir }}/profiles-data {{ nfsen_vardir }}/profiles-stat \
+    {{ nfsen_htmldir }}/plugins/SURFmap/db \
+    "
+mysqldump -u nfsight --opt --single-transaction nfsight > $dest/mysqldump-nfsight.sql
+
+tar czf $destfile $dirs $dest/mysqldump-nfsight.sql
+rm $dest/mysqldump-nfsight.sql
+tar tzf $destfile > /dev/null
+

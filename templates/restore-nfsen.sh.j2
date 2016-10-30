@@ -1,0 +1,33 @@
+#!/bin/sh
+## restore script for nfsen
+
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+umask 022
+
+if [ $# -gt 1 -a -r "$1" ]; then
+    backupfile=$1
+else
+    backupfile={{ backupdir }}/backup-nfsen.tar.gz
+fi
+
+tmpdir=`mktemp -d /tmp/restore.XXXXXX || exit 1`
+## nfcapd data by nfsen are in {{ nfsen_vardir }}/profiles-data/live/*/
+dirs="{{ nfsen_vardir }}/profiles-data {{ nfsen_vardir }}/profiles-stat \
+    {{ nfsen_htmldir }}/plugins/SURFmap/db \
+    "
+
+tar xzf $backupfile -C $tmpdir
+
+## stop services
+nfsen stop
+
+## restore
+mysql -u nfsight < $tmpdir{{ backupdir }}/mysqldump-nfsight.sql
+
+for d in $dirs; do
+    rsync -rvl $tmpdir/$d $d
+done
+
+## start services
+nfsen start
+

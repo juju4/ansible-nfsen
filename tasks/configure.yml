@@ -1,0 +1,19 @@
+---
+
+- name: Ensure scripts dir exists
+  file: dest={{ scriptsdir }} state=directory mode=0755
+- name: have script to configure channel
+  template: "src=add.nfsen.channels.sh.j2 dest={{ scriptsdir }}/add.nfsen.channels.sh mode=0755 backup=yes"
+- name: push set of protocols and colors for input
+  template: "src={{ item }} dest={{ scriptsdir }}/{{ item | regex_replace('.j2$', '' ) }} mode=0644 backup=yes"
+  with_items:
+    - colors.list.j2
+    - protocols.list.j2
+
+## from http://www.linuxscrew.com/2012/03/15/nfsen-traffic-classification-breakdown/
+##      https://code.google.com/p/renisac/wiki/Traffic_Breakdown + python alternative script
+## FIXME! not idempotent
+- name: preconfigure channels
+  command: "bash add.nfsen.channels.sh {{ item.name }} \"{{ item.networks }}\" {{ item.category }} creates={{ nfsen_vardir }}/{{ item.category }}/{{ item.name }} chdir={{ scriptsdir }}"
+  with_items: "{{ nfsen_channels }}"
+

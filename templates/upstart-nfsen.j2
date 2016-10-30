@@ -1,0 +1,36 @@
+# nfsen - Netflow visualisation and investigation tool 
+#
+
+description     "Netflow visualisation and investigation tool "
+
+start on startup
+stop on runlevel [06]
+
+expect fork
+respawn
+kill timeout 2
+env NFSEN_PIDFILE=/var/run/nfsen/nfsen.pid
+
+script
+    echo $$ > $NFSEN_PIDFILE
+    exec /usr/local/bin/nfsen start
+end script
+
+## inspired from http://karlssonondatabases.blogspot.ca/2010/12/ubunto-upstart-for-automatic-mysql.html
+pre-stop script
+    exec /usr/local/bin/nfsen stop
+
+# Wait for nfsen to end.
+    loop=60
+    while [ $loop -gt 0 ]; do
+# If the pidfile is found, then continue waiting.
+        if [ -e $NFSEN_PIDFILE ] ; then
+            loop=$((loop - 1))
+            sleep 1
+            continue
+        fi
+        break
+    done
+
+end script
+

@@ -1,20 +1,30 @@
 ---
+- fail: msg="This role is not compatible with Ubuntu xenial - nfsen does not support RRDs.pm 1.5+"
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_release == 'xenial'
+
 # tasks file for nfsen
 - name: include os-specific variables
   include_vars: "{{ansible_os_family}}.yml"
+- name: Include version-specific variables for Ubuntu.
+  include_vars: "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"
+  when: ansible_distribution == 'Ubuntu'
 
-- include: setup-redhat.yml
-  when: ansible_os_family == "RedHat"
+#- include: setup-redhat.yml
+#  when: ansible_os_family == "RedHat"
 
-- name: set php timezone
+- name: install nfdump
+  package: name={{item}} state=present
+  with_items: "{{ nfsen_prereqs }}"
+
+- name: set php timezone in php.ini
   lineinfile: >
-      dest=/etc/php.ini
+      dest={{ php_ini }}
       regexp="^.?date.timezone = "
       line="date.timezone = '{{nfsen_php_timezone}}'"
       insertafter=EOF
 
 - name: ensure nfsen user
-  user: name={{nfsen_user}} groups=apache createhome=no
+  user: name={{nfsen_user}} groups={{apache_user}} createhome=no
 
 - name: deploy nfsen.conf
   template: src=nfsen.conf.j2 dest=/etc/nfsen.conf
@@ -35,6 +45,8 @@
   register: nfsen_get_url
 
 - name: extract nfsen archive
+## FIXME! some case fails: FAILED! => {"failed": true, "msg": "file or module does not exist: /usr/local/src/nfsen-1.3.7.tar.gz"}
+#  unarchive: src={{nfsen_src_dir}}/{{nfsen_version}}.tar.gz dest={{nfsen_src_dir}}
   command: >
       chdir={{nfsen_src_dir}}
       creates={{nfsen_src_dir}}/{{nfsen_version}}
@@ -59,54 +71,97 @@
       owner={{ nfsen_user }}
       group={{ nfsen_group }}
       mode=0775
+- name: ensure pid directory at reboot (systemd-tmpfiles)
+  lineinfile: dest=/etc/tmpfiles.d/nfsen.conf line="    d    {{ nfsen_piddir }}   0775 {{ nfsen_user }} {{ nfsen_group }} - -" create=yes
+  when: ansible_service_mgr == 'systemd'
+
+- name: increase kernel semaphore
+## trusty: 250        32000   32      128
+  sysctl: name=kernel.sem value="4096 512000 1600 2048" sysctl_set=yes state=present reload=yes
+  when: not (ansible_virtualization_type is defined and (ansible_virtualization_type == "lxc" or ansible_virtualization_type == "docker"))
 
 - name: install nfsen
   when: nfsen_get_url.changed or not nfsen_stat.stat.exists
   command: >
       chdir={{nfsen_src_dir}}/{{nfsen_version}}
       ./install.pl /etc/nfsen.conf
+## Can not get semaphore:  at libexec/Nfsync.pm line 48.
+## https://sourceforge.net/p/nfsen/mailman/message/32733916/
+  ignore_errors: true
 
-- name: check for systemd
-  stat: path=/usr/bin/systemctl
-  register: stat_systemd
+- name: add nfsen apache configuration
+  template: "src=apache-nfsen.conf.j2 dest={{ apache_conf }}/nfsen.conf mode=0644"
+  notify:
+    - restart apache
+- block:
+    - name: enable nfsen apache configuration
+      file: src=/etc/apache2/conf-available/nfsen.conf dest=/etc/apache2/conf-enabled/nfsen.conf state=link
+      notify:
+        - restart apache
+      when: ansible_distribution_release != 'precise'
+  when: ansible_distribution == 'Ubuntu'
 
 - name: template nfsen.service
-  when: stat_systemd.stat.exists
   template: >
       src=nfsen.service.j2
       dest=/etc/systemd/system/nfsen.service
       owner=root group=root mode=0755
+  when: ansible_service_mgr == 'systemd'
 
 - name: template nfsen init script
-  when: not stat_systemd.stat.exists
   template: >
       src=nfsen.j2
       dest=/etc/init.d/nfsen
       owner=root group=root mode=0755
+  when: ansible_service_mgr != 'systemd' and ansible_distribution_release != 'Ubuntu'
 
-- name: deploy porttracker plugin
-  command: >-
-      chdir={{nfsen_src_dir}}/{{nfsen_version}}
-      creates={{item.dest}}/{{item.src}}
-      cp contrib/PortTracker/{{item.src}} {{item.dest}}/{{item.src}}
-  with_items:
-      - { src: PortTracker.pm,  dest: "{{nfsen_vardir}}/plugins" }
-      - { src: PortTracker.php, dest: "{{nfsen_htmldir}}/plugins" }
+#- name: Debian | install init.d script for nfsen - FIXME! path /usr/bin
+#  get_url:
+#    url: "https://raw.githubusercontent.com/bulletproofnetworks/nfsen-debian/master/debian/init.d"
+#    dest: "/etc/init.d/nfsen"
+#    mode: 0644
+#    checksum: 'sha256:99a562d29b4d1c400573dc10377ba4e3e2d07168741b347490ba5e6824da8739'
+#  when: ansible_distribution_release == 'precise'
+- name: Trusty | install upstart script for nfsen
+  template: src=upstart-nfsen.j2 dest=/etc/init/nfsen.conf mode=0644
+  when: ansible_distribution_release == 'trusty' or ansible_distribution_release == 'precise'
 
-- name: set portsdbdir for porttracker
-  lineinfile: >-
-      dest={{nfsen_vardir}}/plugins/PortTracker.pm
-      regexp="my \$PORTSDBDIR = "
-      line="my $PORTSDBDIR = '{{nfsen_portsdbdir}}';"
-      insertafter=EOF
+- name: check if MacOSX meta files
+  command: "find {{ nfsen_htmldir }} {{ nfsen_vardir }} -iname '._*'"
+  changed_when: false
+  register: macmeta
+- name: clean MacOSX meta files
+  command: "find {{ nfsen_htmldir }} {{ nfsen_vardir }} -iname '._*' -exec rm \\{\\} \\;"
+  when: macmeta is defined and macmeta.stdout is defined and macmeta.stdout != ''
 
-- name: create porttracker directory
-  file: path={{nfsen_portsdbdir}} state=directory owner={{nfsen_group}} group=apache mode=0775
+- name: enable debug mode for frontend
+  replace: "dest={{ nfsen_htmldir }}/conf.php regexp='^$DEBUG=.*;' replace='$DEBUG={{ nfsen_frontend_enable_debug }};' backup=yes"
+  when: nfsen_frontend_enable_debug is defined and (nfsen_frontend_enable_debug == '0' or nfsen_frontend_enable_debug == '1')
 
-- name: create porttracker directories
-  command: >
-      creates={{nfsen_portsdbdir}}/ports.stat
-      nftrack -I -d {{nfsen_portsdbdir}}
+- block:
+    - name: add web htpasswd access
+      htpasswd: "path={{ nfsen_htmldir }}/.htpasswd name={{ item.user }} password={{ item.pass }} owner=root group={{ apache_user }} mode=0640 state=present"
+      with_items: "{{ nfsen_webusers }}"
+  when: nfsen_webusers is defined and nfsen_webusers != []
 
-- name: enable and start nfsend
-  service: name=nfsen state=started enabled=yes pattern=bin/nfsend
+- include: plugin-porttracker.yml
+  when: nfsen_plugin_porttracker is defined and nfsen_plugin_porttracker
+- include: plugin-sshcure.yml
+  when: nfsen_plugin_sshcure is defined and nfsen_plugin_sshcure
+- include: plugin-surfmap.yml
+  when: nfsen_plugin_surfmap is defined and nfsen_plugin_surfmap
+- include: plugin-nfsight.yml
+  when: nfsen_plugin_nfsight is defined and nfsen_plugin_nfsight
+- include: malware-filters.yml
+  when: nfsen_malwarefilters is defined and nfsen_malwarefilters
+
+- name: enable and start nfsen services and dependencies
+  service: name={{ item }} state=started enabled=yes
+  with_items: "{{ nfsen_services }}"
+
+- include: configure.yml
+- include: logging.yml
+- include: backup-restore.yml
+- include: monitoring-nrpe.yml
+  when: nfsen_monitoring_nrpe is defined and nfsen_monitoring_nrpe
+

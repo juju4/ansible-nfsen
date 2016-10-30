@@ -1,0 +1,24 @@
+# NFSen NetFlow Monitor
+Alias "/nfsen" "/var/www/nfsen"
+<Directory "/var/www/nfsen">
+  DirectoryIndex nfsen.php
+  Options -Indexes +SymLinksIfOwnerMatch
+  AllowOverride None
+#  AuthType Basic
+#  AuthName "NFSEN Reserved Area"
+#  AuthUserFile /etc/apache2/nfsen_passwd
+#  Require valid-user
+</Directory>
+
+{% if nfsen_plugin_nfsight is defined and nfsen_plugin_nfsight %}
+<Directory "/var/www{{ nfsen_nfsight_urlpath }}">
+  DirectoryIndex index.php
+  Options -Indexes
+  AllowOverride None
+#  AuthType Basic
+#  AuthName "NFSEN Reserved Area"
+#  AuthUserFile /etc/apache2/nfsen_passwd
+#  Require valid-user
+</Directory>
+{% endif %}
+

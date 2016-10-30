@@ -1,0 +1,29 @@
+---
+
+apache_user: www-data
+nfsen_prereqs:
+    - apache2
+    - nfdump
+    - perl
+    - libsocket6-perl
+    - php7.0
+    - libapache2-mod-php7.0
+#    - perl-Data-Dumper
+    - libmailtools-perl
+    - libsys-syslog-perl
+    - rrdtool
+## FIXME! nfsen: RRD version '1.5001' not yet supported! = ok precise+trusty(1.4.7), nok xenial(1.5.5)
+    - librrds-perl
+    - patch
+    - wget
+    - nfdump-flow-tools
+    - nfdump-sflow
+
+php_ini: /etc/php/7.0/apache2/php.ini
+apache_conf: /etc/apache2/conf-available
+
+nfsen_plugin_porttracker: false
+
+nfsen_services:
+  - nfsen
+  - "{{ apache_svc }}"

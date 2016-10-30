@@ -1,0 +1,105 @@
+<?php
+defined("MAIN") or defined("INSTALL") or die("Restricted access");
+
+$main_conf = array(
+ "version"      =>      "nfsight-beta-20140905",
+ "check_version"=>      "1",
+
+//Main application settings
+ "url_path"     =>      "{{ nfsen_nfsight_urlpath }}",
+ "admin_ip"     =>      array("{{ nfsen_nfsight_adminip }}"), //List of IP allowed to modify/delete tasks
+ "crontab_ip"   =>      "127.0.0.1,::1",
+ "crontab_script"       => array("nfids.php", "aggregate.php", "import_graphlet.php", "email_validation.php"),
+ "admin_email"  =>      "root@localhost",
+ "admin_name"   =>      "A. Dmin",
+
+//Menu settings
+ "menu" => array(
+                        "Events" => "browse.php",
+                        "Nfids" => "nfidsconfig.php",
+                        "Settings" => "setting.php",
+                        "Help" => "help.php",
+                        "Logout" => "index.php?logout"
+        ),
+
+//PHP settings
+ "max_memory"   =>      "512M",
+ "timezone"     =>      "America/New_York",
+ "htmlpurifier" =>      "0",
+
+//Display settings
+ "max_ip"       =>      25,     //To display at once per page
+ "max_service"  =>      5,      //To display, per IP
+ "time_window_size"     => 40,      //Default window of data to display, in number of bins
+ "time_scale"   =>      "minute", // or day or hour
+
+//IP anonymization:
+ "anonymous"    =>      0,      //IP anonymization
+ "ip_key"       =>      array(58,95,7,0),     //IP anonymization secret key
+
+//Flow files
+ "biflow"       =>      "../biflow",
+ "biflow_compressed" => 0,
+
+//MySQL parameter
+ "sql_host"     =>      "127.0.0.1",
+ "sql_port"     =>      "3306",
+ "sql_user"     =>      "nfsight",
+ "sql_pass"     =>      "{{ nfsen_nfsight_dbpass }}",
+ "sql_db" =>            "nfsight",
+ "sql_table" =>         "server_discovery",
+ "sql_limit"    =>      50000,
+ "expiration_min"  => 30, // days
+ "expiration_hour" => 52, // weeks
+ "expiration_day"  => 60, // months
+
+//Backend setting
+ "path" => "/var/www/nfsen/nfsight",
+ "expiration" => "180", // Number of days before backend log data files get removed
+ "max_volume" => "", // Maximum backend folder size before backend log data files get removed (e.g., "500M")
+ # Network ranges (to define internal vs. external end points)
+ "network" => array("{{ nfsen_nfsight_internal_network }}"),
+ # Services detection:
+ "scanner_limit" => "5",
+ "bidirectional_via_nfdump" => "",
+ "processing_timer" => "",
+ # Services output:
+ "print_int_scanner" => "1",
+ "print_ext_scanner" => "1",
+ "print_int_client" => "0",
+ "print_ext_client" => "0",
+ "print_int_server" => "1",
+ "print_ext_server" => "0",
+ "print_int_invalid" => "0",
+ "print_ext_invalid" => "0",
+
+//Nfids parameter
+ "nfids_file_folder"    => "../nfids",
+ "nfids_file_prefix"    => "ip.",
+ "nfids_report_threshold"       => 20,
+ "nfids_time_threshold" => 43200,
+ "nfids_min_low_priority"       => -1,
+ "nfids_min_medium_priority"    => 50,
+ "nfids_min_high_priority"      => 100,
+ "nfids_label_malformed"        => "Nfids: Malformed",
+ "nfids_label_manytoone"        => "Nfids: Many-To-One IP",
+ "nfids_label_onetoone" => "Nfids: One-To-One IP",
+ "nfids_label_onetomanyip"      => "Nfids: One-To-Many IP",
+ "nfids_label_onetomanyport"    => "Nfids: One-To-Many Port",
+ "nfids_report_malformed"       => 1,
+ "nfids_report_manytoone"       => 0,
+ "nfids_report_onetoone"        => 0,
+ "nfids_report_onetomanyip"     => 1,
+ "nfids_report_onetomanyport"   => 1,
+
+//Welcome message on the login page:
+ "welcome_message"      => "This website is the front-end of a network visualization application called Nfsight. It works on top of Netflow and provides an interface to:
+        <ul>    <li>Understand network activity,
+                <li>Identify the population of servers hosting a given service,
+                <li>Detect rogue servers and malicious activity.
+        </ul>
+        For more information, please visit <a href=http://nfsight.sourceforge.net>http://nfsight.sourceforge.net</a>"
+
+);
+?>
+

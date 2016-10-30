@@ -1,0 +1,17 @@
+#!/bin/bash
+
+export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
+
+cd {{ nfsen_vardir }}/profiles-stat/malware/Malware-Domain-List
+
+printf "IP in [\n" > temp.txt
+wget -qO- http://www.malwaredomainlist.com/hostslist/ip.txt  | sed -e 's/^M//g' >> temp.txt
+printf "]\n" >> temp.txt
+
+for f in *-filter.txt ; do
+   cp temp.txt $f
+done
+
+rm temp.txt
+
+

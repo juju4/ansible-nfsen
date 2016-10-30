@@ -2,7 +2,7 @@
 #
 # NfSen master config file
 #
-# $Id: nfsen-dist.conf 22 2007-11-20 12:27:38Z phaag $
+# $Id: nfsen.conf.j2 3147 2016-10-22 22:28:34Z julien $
 #
 # Configuration of NfSen:
 # Set all the values to fit your NfSen setup and run the 'install.pl'
@@ -231,6 +231,32 @@ $syslog_facility = '{{nfsen_syslog_facility}}';
 		# array
 		'mary had a little lamb' 
 	],
+{% if nfsen_plugin_nfsight is defined and nfsen_plugin_nfsight %}
+    nfsight => {
+        path => "/var/www{{ nfsen_nfsight_urlpath }}",
+        expiration => "180",
+        max_volume => "",
+        processing_timer => "",
+        network => {
+            "10.0.0.0" => "16",
+        },
+        scanner_limit => "5",
+        bidirectional_via_nfdump => "",
+        print_int_scanner => "1",
+        print_ext_scanner => "1",
+        print_int_client => "0",
+        print_ext_client => "0",
+        print_int_server => "1",
+        print_ext_server => "0",
+        print_int_invalid => "0",
+        print_ext_invalid => "0",
+        sql_host => "127.0.0.1",
+        sql_port => "3306",
+        sql_user => "nfsight",
+        sql_pass => "{{ nfsen_nfsight_dbpass }}",
+        sql_db => "nfsight",
+    },
+{% endif %}
 );
 
 #

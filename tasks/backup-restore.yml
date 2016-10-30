@@ -1,0 +1,17 @@
+---
+
+- name: ensure backupdir and scriptsdir exists
+  file: path={{ item }} state=directory mode=0755
+  with_items:
+    - "{{ backupdir }}"
+    - "{{ scriptsdir }}"
+- name: add backup script
+  template: src=backup-nfsen.sh.j2 dest={{ scriptsdir }}/backup-nfsen.sh mode=0755
+- name: add restore script
+  template: src=restore-nfsen.sh.j2 dest={{ scriptsdir }}/restore-nfsen.sh mode=0755
+- name: setup cron backup
+  cron: name="nfsen-backup" minute="30" hour="3" weekday="0"
+    job="{{ scriptsdir }}/backup-nfsen.sh > /dev/null 2>&1"
+    user=root
+    cron_file=ansible_nfsen-backup
+

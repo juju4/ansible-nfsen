@@ -1,0 +1,40 @@
+---
+
+apache_user: www-data
+apache_svc: apache2
+
+nfsen_prereqs:
+    - apache2
+    - nfdump
+    - perl
+    - libsocket6-perl
+#    - php5     ## trusty
+    - php7      ## xenial
+#    - perl-Data-Dumper
+    - libmailtools-perl
+    - libsys-syslog-perl
+    - rrdtool
+#    - rrdtool-perl
+    - patch
+
+nfsen_sshcure_deps:
+  - libdbd-sqlite3-perl
+  - libjson-perl
+  - libwww-perl
+  - libnet-ip-perl
+
+nfsen_surfmap_deps:
+  - php5
+  - php5-curl
+  - php5-json
+#  - php5-mbstring
+  - php5-sqlite
+  - sqlite3
+
+nfsen_nfsight_deps:
+  - php5-mysql
+  - libdbi-perl
+  - libclass-dbi-mysql-perl
+  - libnumber-format-perl
+  - picviz
+

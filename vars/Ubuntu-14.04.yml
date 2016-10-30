@@ -1,0 +1,29 @@
+---
+
+apache_user: www-data
+nfsen_prereqs:
+    - apache2
+    - nfdump
+    - perl
+    - libsocket6-perl
+    - php5
+    - libapache2-mod-php5
+#    - perl-Data-Dumper
+    - libmailtools-perl
+    - libsys-syslog-perl
+    - rrdtool
+    - librrds-perl
+    - patch
+    - wget
+    - nfdump-flow-tools
+    - nfdump-sflow
+
+php_ini: /etc/php5/apache2/php.ini
+apache_conf: /etc/apache2/conf-available
+
+## nftrack command not available from ubuntu repo, need nfdump source compile...
+nfsen_plugin_porttracker: false
+
+nfsen_services:
+  - nfsen
+  - "{{ apache_svc }}"

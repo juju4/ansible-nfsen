@@ -1,0 +1,20 @@
+---
+
+apache_user: www-data
+apache_svc: apache2
+
+nfsen_prereqs:
+    - apache2
+    - nfdump
+    - perl
+    - libsocket6-perl
+#    - php5     ## trusty
+    - php7      ## xenial
+#    - perl-Data-Dumper
+    - libmailtools-perl
+    - libsys-syslog-perl
+    - rrdtool
+    - librrds-perl
+    - patch
+    - wget
+

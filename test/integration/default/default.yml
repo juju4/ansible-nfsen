@@ -1,0 +1,20 @@
+---
+
+- hosts: all
+#- hosts: test-kitchen
+  vars:
+    - postgresql_databases:
+        - name: "nfsight"
+    - postgresql_users:
+        - name: "nfsight"
+          password: "{{ nfsen_nfsight_dbpass }}"
+          db: "nfsight"
+  roles:
+## for plugins surfmap, sshcure
+    - juju4.maxmind
+## for plugin nfsight
+    - geerlingguy.mysql
+    - sfromm.nfsen
+## for testing
+    - juju4.fprobe
+

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
+
+cd {{ nfsen_vardir }}/profiles-stat/malware/ZeusBotNet_CC
+
+printf "IP in [\n" > temp.txt
+wget --no-check-certificate -qO- https://zeustracker.abuse.ch/blocklist.php?download=badips | tail -n +7  >> temp.txt
+printf "]\n" >> temp.txt
+
+for f in *-filter.txt ; do
+   cp temp.txt $f
+done
+
+rm temp.txt
+

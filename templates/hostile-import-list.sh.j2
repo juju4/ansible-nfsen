@@ -1,0 +1,16 @@
+#!/bin/bash
+
+export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
+
+cd {{ nfsen_vardir }}/profiles-stat/malware/Hostile_IPs
+
+printf "IP in [\n" > temp.txt
+wget -qO- http://www.autoshun.org/files/shunlist.csv | tail -n +2 | awk -F, '{print $1}' >> temp.txt
+printf "]\n" >> temp.txt
+
+for f in *-filter.txt ; do
+   cp temp.txt $f
+done
+
+rm temp.txt
+

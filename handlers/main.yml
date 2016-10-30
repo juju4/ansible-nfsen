@@ -5,3 +5,10 @@
 
 - name: reconfig nfsend
   shell: /usr/bin/yes | {{nfsen_bindir}}/nfsen reconfig
+
+- name: restart apache
+  service: name="{{ apache_svc }}" state=restarted
+
+- name: restart rsyslog
+  service: name=rsyslog state=restarted
+

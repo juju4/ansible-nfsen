@@ -1,0 +1,81 @@
+---
+
+- name: get surfmap archive
+  get_url:
+    url: 'http://downloads.sourceforge.net/project/surfmap/source/SURFmap_v3.3.1.tar.gz'
+    dest: "{{nfsen_src_dir}}/SURFmap_v3.3.1.tar.gz"
+    mode: 0644
+    checksum: 'sha256:42d458e01b9623866392b210e9daef408e13c0f885d1072869e658b9b29321be'
+
+- name: uncompress surfmap
+#  unarchive: "src={{nfsen_src_dir}}/SURFmap_v3.3.1.tar.gz dest={{nfsen_src_dir}} creates={{nfsen_src_dir}}/surfmap/readme.txt"
+  command: >
+      chdir={{nfsen_src_dir}}
+      creates={{nfsen_src_dir}}/surfmap/readme.txt
+      tar xzf {{nfsen_src_dir}}/SURFmap_v3.3.1.tar.gz
+
+- name: surfmap | packages dependencies
+  package: name={{ item }} state=present
+  with_items: "{{ nfsen_surfmap_deps }}"
+
+- block: 
+    - name: surfmap | install frontend files
+    ## FIXME! 'Remote copy does not support recursive copy of directory' and synchronize not supporting remote_src=yes
+    #  copy: "src={{ item }} dest={{ nfsen_htmldir }}/plugins mode=0644 group={{apache_user}} remote_src=yes"
+    ## FIXME! fileglob doing only files
+    #  with_fileglob:
+    #    - "{{nfsen_src_dir}}/SURFmap/frontend/*"
+    ## FIXME! centos7+precise rsync(3.0.9) has no chown/chmod option (ok trusty/rsync3.1)
+      command: "rsync -r --chown=root:{{ apache_user }} --chmod=D0755,F0644 {{ item.s }} {{ nfsen_htmldir }}/plugins/ creates={{ item.d }}"
+      with_items:
+        - { s: "{{nfsen_src_dir}}/SURFmap/frontend/SURFmap.php", d: "{{ nfsen_htmldir }}/plugins/SURFmap.php" }
+        - { s: "{{nfsen_src_dir}}/SURFmap/frontend/SURFmap", d: "{{ nfsen_htmldir }}/plugins/SURFmap/index.php" }
+    - name: surfmap | install backend files
+    #  copy: "src={{ item }} dest={{ nfsen_vardir }}/plugins mode=0644 owner={{apache_user}} group={{apache_user}} remote_src=yes"
+      command: "rsync -r --chown={{ apache_user }}:{{ apache_user }} --chmod=D0755,F0644 {{ item.s }} {{ nfsen_vardir }}/plugins/ creates={{ item.d }}"
+    #  with_fileglob:
+    #    - "{{nfsen_src_dir}}/SURFmap/backend/*"
+      with_items:
+        - { s: "{{nfsen_src_dir}}/SURFmap/backend/SURFmap.pm", d: "{{ nfsen_vardir }}/plugins/SURFmap.pm" }
+        - { s: "{{nfsen_src_dir}}/SURFmap/backend/SURFmap", d: "{{ nfsen_vardir }}/plugins/SURFmap/RPC.pm" }
+  when: ansible_distribution_release == 'trusty'
+- block: 
+    - name: surfmap | install frontend files
+      command: "rsync -r {{ item.s }} {{ nfsen_htmldir }}/plugins/ creates={{ item.d }}"
+      with_items:
+        - { s: "{{nfsen_src_dir}}/SURFmap/frontend/SURFmap.php", d: "{{ nfsen_htmldir }}/plugins/SURFmap.php" }
+        - { s: "{{nfsen_src_dir}}/SURFmap/frontend/SURFmap", d: "{{ nfsen_htmldir }}/plugins/SURFmap/index.php" }
+    - name: surfmap | install backend files
+      command: "rsync -r {{ item.s }} {{ nfsen_vardir }}/plugins/ creates={{ item.d }}"
+      with_items:
+        - { s: "{{nfsen_src_dir}}/SURFmap/backend/SURFmap.pm", d: "{{ nfsen_vardir }}/plugins/SURFmap.pm" }
+        - { s: "{{nfsen_src_dir}}/SURFmap/backend/SURFmap", d: "{{ nfsen_vardir }}/plugins/SURFmap/RPC.pm" }
+    - name: surfmap | validate frontend permissions
+      file: "dest={{nfsen_htmldir }}/plugins/SURFmap state=directory mode=0755 owner=root group={{ apache_user }} recurse=yes"
+    - name: surfmap | validate backend permissions
+      file: "dest={{nfsen_vardir}}/plugins/SURFmap state=directory mode=0755 owner={{ apache_user }} group={{ apache_user }} recurse=yes"
+  when: ansible_distribution_release != 'trusty'
+
+- name: surfmap | check directories exists
+  file: dest={{ item }} state=directory mode=0755
+  with_items:
+    - "{{ nfsen_htmldir }}/plugins/SURFmap/lib/MaxMind"
+
+- name: surfmap | symlink maxmind
+  file: "src=/var/maxmind/{{ item }} dest={{ nfsen_htmldir }}/plugins/SURFmap/lib/MaxMind/{{ item }} state=link"
+  with_items:
+    - GeoLiteCity.dat
+    - GeoLiteCityv6.dat
+
+- name: surfmap | check permissions for db write (file)
+  file: "dest={{ nfsen_htmldir }}/plugins/SURFmap/db/surfmap.sqlite state=file mode=0664 owner=root group={{ apache_user }}"
+- name: surfmap | check permissions for db write (dir - temp files)
+  file: "dest={{ nfsen_htmldir }}/plugins/SURFmap/db state=directory mode=0775 owner=root group={{ apache_user }}"
+
+- name: surfmap | review configuration
+  replace: "dest={{ nfsen_htmldir }}/plugins/SURFmap/config.php regexp={{ item.re }} replace={{ item.rep }} backup=yes"
+  with_items:
+    - { re: '^\$config\[.map_center.\] = ".*";', rep: "$config['map_center'] = '{{ nfsen_plugin_surfmap_map_center }}';" }
+    - { re: '^\$config\[.internal_domains.\] = .*;', rep: "$config['internal_domains'] = '{{ nfsen_plugin_surfmap_internal_domains }}';" }
+#    - { re: '^', rep: '' }
+
