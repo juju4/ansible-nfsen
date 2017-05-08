@@ -1,5 +1,7 @@
-Role Name
-=========
+[![Build Status - Master](https://travis-ci.org/juju4/ansible-nfsen.svg?branch=master)](https://travis-ci.org/juju4/ansible-nfsen)
+[![Build Status - Devel](https://travis-ci.org/juju4/ansible-nfsen.svg?branch=devel)](https://travis-ci.org/juju4/ansible-nfsen/branches)
+Nfsen setup
+===========
 
 Ansible role to set up [nfsen](http://nfsen.sf.net)
 Warning! this application seems not maintained. (last official update 1.3.7, dec 2014)
