@@ -2,17 +2,17 @@
 
 - name: get surfmap archive
   get_url:
-    url: 'http://downloads.sourceforge.net/project/surfmap/source/SURFmap_v3.3.1.tar.gz'
-    dest: "{{nfsen_src_dir}}/SURFmap_v3.3.1.tar.gz"
+    url: "{{ nfsen_surfmap_url }}"
+    dest: "{{nfsen_src_dir}}/{{ nfsen_surfmap_url | basename }}"
     mode: 0644
-    checksum: 'sha256:42d458e01b9623866392b210e9daef408e13c0f885d1072869e658b9b29321be'
+    checksum: "{{ nfsen_surfmap_hash }}"
 
 - name: uncompress surfmap
 #  unarchive: "src={{nfsen_src_dir}}/SURFmap_v3.3.1.tar.gz dest={{nfsen_src_dir}} creates={{nfsen_src_dir}}/surfmap/readme.txt"
   command: >
       chdir={{nfsen_src_dir}}
       creates={{nfsen_src_dir}}/surfmap/readme.txt
-      tar xzf {{nfsen_src_dir}}/SURFmap_v3.3.1.tar.gz
+      tar xzf {{nfsen_src_dir}}/{{ nfsen_surfmap_url | basename }}
 
 - name: surfmap | packages dependencies
   package: name={{ item }} state=present

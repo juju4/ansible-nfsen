@@ -2,4 +2,5 @@
 - name: Ensure nrpe.d dir exists
   file: dest=/etc/nagios/nrpe.d state=directory mode=0755
 - name: add some nrpe commands for monitoring
-  copy: src=nfsen-nrpe.cfg dest=/etc/nagios/nrpe.d/nfsen-nrpe.cfg mode=0644
+  template: src=nfsen-nrpe.cfg.j2 dest=/etc/nagios/nrpe.d/nfsen-nrpe.cfg mode=0644
+

@@ -1,0 +1,9 @@
+command[check_procs_nfsend]=/usr/lib/nagios/plugins/check_procs -C nfsend -w 1:1 -c 1:1
+command[check_procs_nfsend_comm]=/usr/lib/nagios/plugins/check_procs -C nfsend-comm -w 1:1 -c 1:1
+command[check_procs_nfcapd]=/usr/lib/nagios/plugins/check_procs -C nfcapd -w 1:1 -c 1:1
+#command[check_mhn_errors]=/usr/lib/nagios/plugins/check_log -F /var/log/mhn/mhn-collector.log -O /var/tmp/mhn-collector.tmp -q 'ERROR'
+command[check_var_lib_nfsen]=/usr/lib/nagios/plugins/count_file.pl -d {{ nfsen_vardir }} -w 100:30000 -c 10:50000 -x 3000000 -s 6000000 -r
+## alternative command: find /var/lib/nfsen/profiles-data/live/ -mmin -5 -type f
+#command[check_var_lib_nfsen_age]=/usr/lib/nagios/plugins/check_file_ages_in_dirs -d {{ nfsen_vardir }}/profiles-data/ -w 15 -c 30 -t minutes --check-dirs
+command[check_var_lib_nfsen_age]=/usr/lib/nagios/plugins/check_newest_file_age -d {{ nfsen_vardir }}/profiles-data/live/ -t minutes -w 15 -c 30 --check-dirs
+

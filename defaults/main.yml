@@ -3,7 +3,8 @@
 nfsen_php_timezone: 'UTC'
 #nfsen_version: nfsen-1.3.6p1
 nfsen_version: nfsen-1.3.7
-nfsen_url: http://downloads.sourceforge.net/project/nfsen/stable/{{nfsen_version}}/{{nfsen_version}}.tar.gz
+#nfsen_url: http://downloads.sourceforge.net/project/nfsen/stable/{{nfsen_version}}/{{nfsen_version}}.tar.gz
+nfsen_url: "http://downloads.sourceforge.net/project/nfsen/stable/{{nfsen_version}}/{{nfsen_version}}.tar.gz?r=&ts=1477095307&use_mirror=pilotfiber"
 nfsen_src_dir: /usr/local/src
 # defaults file for nfsen.conf
 nfsen_bindir: /usr/local/bin
@@ -110,7 +111,20 @@ netmon:
 nfsen_channels:
   - { name: 'All', networks: '0.0.0.0/0', category: 'TrafficClassification' }
   - { name: 'PrivateIP', networks: '10.0.0.0/8 172.16.0.0/12 192.168.0.0/1', category: 'TrafficClassification' }
-  - { name: 'nfsen-eth0', networks: "{{ ansible_default_ipv4.address }}", category: 'CriticalHosts' }
+## travis/centos7: 'ansible_default_ipv4' is undefined. https://travis-ci.org/juju4/ansible-nfsen/jobs/171836421#L1728
+#  - { name: 'nfsen-eth0', networks: "{{ ansible_default_ipv4.address }}", category: 'CriticalHosts' }
+
+nfsen_nfsight_url: 'http://downloads.sourceforge.net/project/nfsight/nfsight-beta-20140905.tgz'
+nfsen_nfsight_dirname: 'nfsight-beta-20140905'
+nfsen_nfsight_hash: 'sha256:6d52e06d516c4c539ac43893ef42500ea1d2153fb1c04bff8f522ab213cef212'
+
+## FIXME! url download fails sometimes... retry and ok (sourceforge redirect?)
+nfsen_sshcure_url: 'http://downloads.sourceforge.net/project/sshcure/source/SSHCure_v2.4.1.tar.gz'
+#nfsen_sshcure_url: 'http://downloads.sourceforge.net/project/sshcure/source/SSHCure_v2.4.1.tar.gz?r=&ts=1477095307&use_mirror=pilotfiber'
+nfsen_sshcure_hash: 'sha256:b1c0e8a35fe65918314ac5bc00a033185f74079e06f3706b28617faf68b9d466'
+
+nfsen_surfmap_url: 'http://downloads.sourceforge.net/project/surfmap/source/SURFmap_v3.3.1.tar.gz'
+nfsen_surfmap_hash: 'sha256:42d458e01b9623866392b210e9daef408e13c0f885d1072869e658b9b29321be'
 
 scriptsdir: /usr/local/bin
 backupdir: /var/_backup

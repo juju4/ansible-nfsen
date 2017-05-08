@@ -13,7 +13,9 @@
 ## from http://www.linuxscrew.com/2012/03/15/nfsen-traffic-classification-breakdown/
 ##      https://code.google.com/p/renisac/wiki/Traffic_Breakdown + python alternative script
 ## FIXME! not idempotent
-- name: preconfigure channels
-  command: "bash add.nfsen.channels.sh {{ item.name }} \"{{ item.networks }}\" {{ item.category }} creates={{ nfsen_vardir }}/{{ item.category }}/{{ item.name }} chdir={{ scriptsdir }}"
-  with_items: "{{ nfsen_channels }}"
+- block:
+    - name: preconfigure channels
+      command: "bash add.nfsen.channels.sh {{ item.name }} \"{{ item.networks }}\" {{ item.category }} creates={{ nfsen_vardir }}/{{ item.category }}/{{ item.name }} chdir={{ scriptsdir }}"
+      with_items: "{{ nfsen_channels }}"
+  when: nfsen_channels != []
 

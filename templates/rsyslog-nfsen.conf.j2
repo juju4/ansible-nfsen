@@ -1,4 +1,12 @@
-:msg, startswith, "nfsen" -/var/log/nfsen.log
+:msg, contains, "nfsen" -/var/log/nfsen.log
+{% if rsyslog_v.stdout is defined and rsyslog_v.stdout | version_compare('8.0', '<') %}
 & ~
-:msg, startswith, "nfprofile" -/var/log/nfsen.log
+{% else %}
+& stop
+{% endif %}
+:msg, contains, "nfprofile" -/var/log/nfsen.log
+{% if rsyslog_v.stdout is defined and rsyslog_v.stdout | version_compare('8.0', '<') %}
 & ~
+{% else %}
+& stop
+{% endif %}

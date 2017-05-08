@@ -1,5 +1,6 @@
 # nfsen - Netflow visualisation and investigation tool 
 #
+## FIXME! Not working
 
 description     "Netflow visualisation and investigation tool "
 
@@ -11,14 +12,20 @@ respawn
 kill timeout 2
 env NFSEN_PIDFILE=/var/run/nfsen/nfsen.pid
 
+pre-start script
+    [ ! -d ${NFSEN_PIDFILE%/*} ] && install -d -o netflow -g netflow -m 0755 ${NFSEN_PIDFILE%/*}
+end script
+
 script
-    echo $$ > $NFSEN_PIDFILE
+## PID file handled by /usr/local/libexec/nfsen/NfSenRC.pm
+#    echo $$ > $NFSEN_PIDFILE
     exec /usr/local/bin/nfsen start
 end script
 
 ## inspired from http://karlssonondatabases.blogspot.ca/2010/12/ubunto-upstart-for-automatic-mysql.html
 pre-stop script
-    exec /usr/local/bin/nfsen stop
+    #exec /usr/local/bin/nfsen stop
+    /usr/local/bin/nfsen stop && rm -f $NFSEN_PIDFILE
 
 # Wait for nfsen to end.
     loop=60

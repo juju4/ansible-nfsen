@@ -46,7 +46,7 @@ describe command('wget -O - http://localhost/nfsen/plugins/nfsight/index.php') d
   its(:stdout) { should match /Nfsight: Network Visualization Application/ }
 end
 
-describe command('nfsen --get-profile live') do
+describe command('/usr/local/bin/nfsen --get-profile live') do
   its(:stdout) { should match /tstart/ }
   its(:stdout) { should match /updated/ }
 end

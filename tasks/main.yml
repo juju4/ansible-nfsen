@@ -12,6 +12,12 @@
 #- include: setup-redhat.yml
 #  when: ansible_os_family == "RedHat"
 
+## required for trusty, precise else got 'WARNING: The following packages cannot be authenticated!'
+## Note: redhat/yum module: unsupported parameter for module: cache_valid_time
+- name: update package cache
+  package: update_cache=yes cache_valid_time=3600
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
 - name: install nfdump
   package: name={{item}} state=present
   with_items: "{{ nfsen_prereqs }}"
@@ -74,6 +80,12 @@
 - name: ensure pid directory at reboot (systemd-tmpfiles)
   lineinfile: dest=/etc/tmpfiles.d/nfsen.conf line="    d    {{ nfsen_piddir }}   0775 {{ nfsen_user }} {{ nfsen_group }} - -" create=yes
   when: ansible_service_mgr == 'systemd'
+- name: ensure pid directory at reboot (rc.local)
+  lineinfile:
+    dest: /etc/rc.local
+    line: "install -d -m 0755 -o {{ nfsen_user }} -g {{ nfsen_group }} {{ nfsen_piddir }}"
+    insertbefore: '^exit 0'
+  when: ansible_service_mgr != 'systemd'
 
 - name: increase kernel semaphore
 ## trusty: 250        32000   32      128

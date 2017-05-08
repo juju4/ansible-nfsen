@@ -1,19 +1,18 @@
 ---
 
-## FIXME! url download fails sometimes... retry and ok (sourceforge redirect?)
 - name: get sshcure archive
   get_url:
-    url: 'http://downloads.sourceforge.net/project/sshcure/source/SSHCure_v2.4.1.tar.gz'
-    dest: "{{nfsen_src_dir}}/SSHCure_v2.4.1.tar.gz"
+    url: "{{ nfsen_sshcure_url }}"
+    dest: "{{nfsen_src_dir}}/{{ nfsen_sshcure_url | basename }}"
     mode: 0644
-    checksum: 'sha256:b1c0e8a35fe65918314ac5bc00a033185f74079e06f3706b28617faf68b9d466'
+    checksum: "{{ nfsen_sshcure_hash }}"
 
 - name: uncompress sshcure
 #  unarchive: "src={{nfsen_src_dir}}/SSHCure_v2.4.1.tar.gz dest={{nfsen_src_dir}} creates={{nfsen_src_dir}}/SSHCure/readme.txt"
   command: >
       chdir={{nfsen_src_dir}}
       creates={{nfsen_src_dir}}/SSHCure/readme.txt
-      tar xzf {{nfsen_src_dir}}/SSHCure_v2.4.1.tar.gz
+      tar xzf {{nfsen_src_dir}}/{{ nfsen_sshcure_url | basename }}
 
 - name: sshcure | packages dependencies
   package: name={{ item }} state=present

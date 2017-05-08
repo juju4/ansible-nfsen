@@ -18,4 +18,4 @@ mysqldump -u nfsight --opt --single-transaction nfsight > $dest/mysqldump-nfsigh
 tar czf $destfile $dirs $dest/mysqldump-nfsight.sql
 rm $dest/mysqldump-nfsight.sql
 tar tzf $destfile > /dev/null
-
+openssl dgst -sha512 $destfile > $destfile.distinfo

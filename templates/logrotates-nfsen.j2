@@ -4,8 +4,10 @@
     daily
     missingok
     notifempty
-    delaycompress
+#    delaycompress
     compress
+    create 644 root root
+    su root root
     postrotate
         invoke-rc.d rsyslog rotate > /dev/null
     endscript
