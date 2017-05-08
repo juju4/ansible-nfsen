@@ -10,11 +10,11 @@ env:
   - distribution: centos
     version: 7
     init: /usr/lib/systemd/systemd
-    run_opts: "--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
 #  - distribution: ubuntu
 #    version: 16.04
 #    init: /lib/systemd/systemd
-#    run_opts: "--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro"
+#    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
 #    run_opts: "--cap-add SYS_ADMIN"
   - distribution: ubuntu
     version: 14.04
@@ -28,12 +28,17 @@ env:
 #    version: 3.4
 #    init: /sbin/init
 #    run_opts: ""
+#  - distribution: debian
+#    version: 8
+#    init: /lib/systemd/systemd
+#    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
 
 services:
   - docker
 
 before_install:
   # - sudo apt-get update
+  - docker --version
   # Pull container
   - 'sudo docker pull ${distribution}:${version}'
   - env
@@ -56,7 +61,7 @@ script:
   - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm ansible-playbook /etc/ansible/roles/sfromm.nfsen/test/integration/default/default.yml --syntax-check'
 
   # Test role.
-  - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm ansible-playbook /etc/ansible/roles/sfromm.nfsen/test/integration/default/default.yml'
+  - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm ansible-playbook /etc/ansible/roles/sfromm.nfsen/test/integration/default/default.yml -vvvv'
 
   # Test role idempotence.
   - >
@@ -73,6 +78,9 @@ script:
   # Clean up
   - 'sudo docker stop "$(cat ${container_id})"'
 
+after_failure:
+  - 'docker exec --tty "$(cat ${container_id})" env TERM=xterm tail -50 /var/log/syslog'
+  - 'docker exec --tty "$(cat ${container_id})" env TERM=xterm service --status-all'
+
 notifications:
   webhooks: https://galaxy.ansible.com/api/v1/notifications/
-
