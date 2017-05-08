@@ -17,4 +17,5 @@ nfsen_prereqs:
     - librrds-perl
     - patch
     - wget
+    - rsyslog
 

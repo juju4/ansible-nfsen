@@ -15,6 +15,7 @@ nfsen_prereqs:
     - librrds-perl
     - patch
     - wget
+    - rsyslog
 
 php_ini: /etc/php5/apache2/php.ini
 apache_conf: /etc/apache2/conf.d

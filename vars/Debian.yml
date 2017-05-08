@@ -16,6 +16,7 @@ nfsen_prereqs:
     - rrdtool
 #    - rrdtool-perl
     - patch
+    - rsyslog
 
 nfsen_sshcure_deps:
   - libdbd-sqlite3-perl

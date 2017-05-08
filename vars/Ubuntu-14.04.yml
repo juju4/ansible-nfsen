@@ -17,6 +17,7 @@ nfsen_prereqs:
     - wget
     - nfdump-flow-tools
     - nfdump-sflow
+    - rsyslog
 
 php_ini: /etc/php5/apache2/php.ini
 apache_conf: /etc/apache2/conf-available

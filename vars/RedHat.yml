@@ -15,6 +15,7 @@ nfsen_prereqs:
     - rrdtool-perl
     - patch
     - wget
+    - rsyslog
 
 php_ini: /etc/php.ini
 apache_conf: /etc/httpd/conf.d
