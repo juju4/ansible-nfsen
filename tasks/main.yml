@@ -168,8 +168,15 @@
   when: nfsen_malwarefilters is defined and nfsen_malwarefilters
 
 - name: enable and start nfsen services and dependencies
-  service: name={{ item }} state=started enabled=yes
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
   with_items: "{{ nfsen_services }}"
+
+- shell: "ps axu | egrep '(nfsen|nfdump)'"
+  register: psaxu
+- debug: var=psaxu.stdout_lines
 
 - include: configure.yml
 - include: logging.yml

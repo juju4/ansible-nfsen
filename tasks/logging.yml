@@ -8,10 +8,19 @@
 - name: send nfsen log to separate file through rsyslog
 #  template: src=rsyslog-nfsen.conf.j2 dest=/etc/rsyslog.d/40-nfsen.conf mode=0644
 ## put a lower rank so those logs are not send remotely... can be massive
-  template: src=rsyslog-nfsen.conf.j2 dest=/etc/rsyslog.d/01-nfsen.conf mode=0644
+  template:
+    src: rsyslog-nfsen.conf.j2
+    dest: /etc/rsyslog.d/01-nfsen.conf
+    mode: '0644'
+    backup: yes
   notify:
     - restart rsyslog
 ## FIXME! FAILED! => {"changed": false, "failed": true, "msg": "IOError: [Errno 2] No such file or directory: u'/tmp/kitchen/logrotate-nfsen.j2'"}
 - name: add logrotate configuration for nfsen.log
-  template: src=logrotate-nfsen.j2 dest=/etc/logrotate.d/nfsen mode=0644
+  template:
+    src: logrotate-nfsen.j2
+    dest: /etc/logrotate.d/nfsen
+    mode: '0644'
+    backup: yes
+  ignore_errors: true
 
