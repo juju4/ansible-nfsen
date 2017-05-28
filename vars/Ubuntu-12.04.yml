@@ -15,7 +15,9 @@ nfsen_prereqs:
     - librrds-perl
     - patch
     - wget
+    - nfdump
     - rsyslog
+    - python-mysqldb
 
 php_ini: /etc/php5/apache2/php.ini
 apache_conf: /etc/apache2/conf.d
