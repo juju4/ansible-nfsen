@@ -15,7 +15,7 @@
     backup: yes
   notify:
     - restart rsyslog
-## FIXME! FAILED! => {"changed": false, "failed": true, "msg": "IOError: [Errno 2] No such file or directory: u'/tmp/kitchen/logrotate-nfsen.j2'"}
+
 - name: add logrotate configuration for nfsen.log
   template:
     src: logrotate-nfsen.j2
