@@ -1,0 +1,16 @@
+---
+## https://backports.debian.org/Instructions/
+
+- block:
+    - name: Debian | Enable jessie backports
+      lineinfile:
+        dest: '/etc/apt/sources.list'
+        regexp: '^deb http://ftp.debian.org/debian jessie-backports main'
+        line: 'deb http://ftp.debian.org/debian jessie-backports main'
+        backup: yes
+    - name: Debian | install nfdump from backports
+      apt:
+        name: nfdump
+        state: present
+        default_release: jessie-backports
+  when: ansible_distribution == 'Debian' and ansible_distribution_release == 'jessie'

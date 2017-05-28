@@ -8,8 +8,8 @@ nfsen_prereqs:
     - nfdump
     - perl
     - libsocket6-perl
-#    - php5     ## trusty
-    - php7      ## xenial
+    - php5     ## jessie
+#    - php7      ## stretch
 #    - perl-Data-Dumper
     - libmailtools-perl
     - libsys-syslog-perl

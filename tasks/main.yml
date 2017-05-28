@@ -9,8 +9,8 @@
   include_vars: "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"
   when: ansible_distribution == 'Ubuntu'
 
-#- include: setup-redhat.yml
-#  when: ansible_os_family == "RedHat"
+- include: setup-debian.yml
+  when: ansible_distribution == "Debian"
 
 ## required for trusty, precise else got 'WARNING: The following packages cannot be authenticated!'
 ## Note: redhat/yum module: unsupported parameter for module: cache_valid_time
