@@ -1,6 +1,14 @@
 ---
 
 - hosts: all
+  vars:
+    - postgresql_databases:
+        - name: "nfsight"
+    - postgresql_users:
+        - name: "nfsight"
+          password: "{{ nfsen_nfsight_dbpass }}"
+          db: "nfsight"
   roles:
-    - myrole
-
+## for plugin nfsight
+    - geerlingguy.mysql
+    - sfromm.nfsen
