@@ -39,3 +39,11 @@ nfsen_nfsight_deps:
   - libnumber-format-perl
   - picviz
 
+php_ini: /etc/php/7.0/apache2/php.ini
+apache_conf: /etc/apache2/conf-available
+
+nfsen_plugin_porttracker: false
+
+nfsen_services:
+  - nfsen
+  - "{{ apache_svc }}"
