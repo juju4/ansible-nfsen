@@ -141,6 +141,7 @@
 - name: check if MacOSX meta files
   command: "find {{ nfsen_htmldir }} {{ nfsen_vardir }} -iname '._*'"
   changed_when: false
+  ignore_errors: true
   register: macmeta
 - name: clean MacOSX meta files
   command: "find {{ nfsen_htmldir }} {{ nfsen_vardir }} -iname '._*' -exec rm \\{\\} \\;"
