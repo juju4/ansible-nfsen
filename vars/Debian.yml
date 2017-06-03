@@ -9,7 +9,7 @@ nfsen_prereqs:
     - perl
     - libsocket6-perl
 #    - php5     ## jessie
-    - php7      ## stretch
+    - php      ## stretch
 #    - perl-Data-Dumper
     - libmailtools-perl
     - libsys-syslog-perl
