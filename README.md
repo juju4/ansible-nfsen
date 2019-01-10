@@ -5,6 +5,7 @@ Nfsen setup
 
 Ansible role to set up [nfsen](http://nfsen.sf.net)
 Warning! this application seems not maintained. (last official update 1.3.7, dec 2014)
+Since Jan 2019, maxmind has [discontinued geolite legacy](https://support.maxmind.com/geolite-legacy-discontinuation-notice/) which is a dependency for multiples nfsen plugins.
 
 Requirements
 ------------
