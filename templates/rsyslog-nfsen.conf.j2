@@ -1,3 +1,4 @@
+{{ ansible_managed | comment }}
 :msg, contains, "nfsen" -/var/log/nfsen.log
 {% if rsyslog_v.stdout is defined and rsyslog_v.stdout | version_compare('8.0', '<') %}
 & ~
