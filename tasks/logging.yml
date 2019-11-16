@@ -1,12 +1,24 @@
 ---
 
+- name: Ensure logging tools are present
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - rsyslog
+    - logrotate
+  register: pkg_result
+  until: pkg_result is success
+
 - name: get rsyslog version
   command: "rsyslogd -v | awk -F'[ ,]' '/rsyslogd/ { print $2 }'"
   changed_when: false
   register: rsyslog_v
 
+- name: ensure /etc/rsyslog.d exists
+  file: dest=/etc/rsyslog.d state=directory mode=0755
+
 - name: send nfsen log to separate file through rsyslog
-#  template: src=rsyslog-nfsen.conf.j2 dest=/etc/rsyslog.d/40-nfsen.conf mode=0644
 ## put a lower rank so those logs are not send remotely... can be massive
   template:
     src: rsyslog-nfsen.conf.j2
@@ -15,6 +27,9 @@
     backup: yes
   notify:
     - restart rsyslog
+
+- name: ensure /etc/logrotate.d exists
+  file: dest=/etc/logrotate.d state=directory mode=0755
 
 - name: add logrotate configuration for nfsen.log
   template:
