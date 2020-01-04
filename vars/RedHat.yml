@@ -16,6 +16,7 @@ nfsen_prereqs:
     - patch
     - wget
     - rsyslog
+    - crontabs
 
 php_ini: /etc/php.ini
 apache_conf: /etc/httpd/conf.d
