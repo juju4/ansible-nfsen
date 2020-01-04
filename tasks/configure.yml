@@ -15,7 +15,10 @@
 ## FIXME! not idempotent
 - block:
     - name: preconfigure channels
-      command: "bash add.nfsen.channels.sh {{ item.name }} \"{{ item.networks }}\" {{ item.category }} creates={{ nfsen_vardir }}/{{ item.category }}/{{ item.name }} chdir={{ scriptsdir }}"
+      command: "bash add.nfsen.channels.sh {{ item.name }} \"{{ item.networks }}\" {{ item.category }}"
+      args:
+        creates: "{{ nfsen_vardir }}/{{ item.category }}/{{ item.name }}"
+        chdir: "{{ scriptsdir }}"
       with_items: "{{ nfsen_channels }}"
   when: nfsen_channels != []
 

@@ -3,57 +3,60 @@
 - name: get surfmap archive
   get_url:
     url: "{{ nfsen_surfmap_url }}"
-    dest: "{{nfsen_src_dir}}/{{ nfsen_surfmap_url | basename }}"
+    dest: "{{ nfsen_src_dir }}/{{ nfsen_surfmap_url | basename }}"
     mode: 0644
     checksum: "{{ nfsen_surfmap_hash }}"
+  register: dl
+  until: dl is success
 
 - name: uncompress surfmap
-#  unarchive: "src={{nfsen_src_dir}}/SURFmap_v3.3.1.tar.gz dest={{nfsen_src_dir}} creates={{nfsen_src_dir}}/surfmap/readme.txt"
+#  unarchive: "src={{ nfsen_src_dir }}/SURFmap_v3.3.1.tar.gz dest={{ nfsen_src_dir }} creates={{ nfsen_src_dir }}/surfmap/readme.txt"
   command: >
-      chdir={{nfsen_src_dir}}
-      creates={{nfsen_src_dir}}/surfmap/readme.txt
-      tar xzf {{nfsen_src_dir}}/{{ nfsen_surfmap_url | basename }}
+      chdir={{ nfsen_src_dir }}
+      creates={{ nfsen_src_dir }}/surfmap/readme.txt
+      tar xzf {{ nfsen_src_dir }}/{{ nfsen_surfmap_url | basename }}
 
 - name: surfmap | packages dependencies
-  package: name={{ item }} state=present
-  with_items: "{{ nfsen_surfmap_deps }}"
+  package:
+    name: "{{ nfsen_surfmap_deps }}"
+    state: present
 
-- block: 
+- block:
     - name: surfmap | install frontend files
     ## FIXME! 'Remote copy does not support recursive copy of directory' and synchronize not supporting remote_src=yes
-    #  copy: "src={{ item }} dest={{ nfsen_htmldir }}/plugins mode=0644 group={{apache_user}} remote_src=yes"
+    #  copy: "src={{ item }} dest={{ nfsen_htmldir }}/plugins mode=0644 group={{ apache_user }} remote_src=yes"
     ## FIXME! fileglob doing only files
     #  with_fileglob:
-    #    - "{{nfsen_src_dir}}/SURFmap/frontend/*"
+    #    - "{{ nfsen_src_dir }}/SURFmap/frontend/*"
     ## FIXME! centos7+precise rsync(3.0.9) has no chown/chmod option (ok trusty/rsync3.1)
       command: "rsync -r --chown=root:{{ apache_user }} --chmod=D0755,F0644 {{ item.s }} {{ nfsen_htmldir }}/plugins/ creates={{ item.d }}"
       with_items:
-        - { s: "{{nfsen_src_dir}}/SURFmap/frontend/SURFmap.php", d: "{{ nfsen_htmldir }}/plugins/SURFmap.php" }
-        - { s: "{{nfsen_src_dir}}/SURFmap/frontend/SURFmap", d: "{{ nfsen_htmldir }}/plugins/SURFmap/index.php" }
+        - { s: "{{ nfsen_src_dir }}/SURFmap/frontend/SURFmap.php", d: "{{ nfsen_htmldir }}/plugins/SURFmap.php" }
+        - { s: "{{ nfsen_src_dir }}/SURFmap/frontend/SURFmap", d: "{{ nfsen_htmldir }}/plugins/SURFmap/index.php" }
     - name: surfmap | install backend files
-    #  copy: "src={{ item }} dest={{ nfsen_vardir }}/plugins mode=0644 owner={{apache_user}} group={{apache_user}} remote_src=yes"
+    #  copy: "src={{ item }} dest={{ nfsen_vardir }}/plugins mode=0644 owner={{ apache_user }} group={{ apache_user }} remote_src=yes"
       command: "rsync -r --chown={{ apache_user }}:{{ apache_user }} --chmod=D0755,F0644 {{ item.s }} {{ nfsen_vardir }}/plugins/ creates={{ item.d }}"
     #  with_fileglob:
-    #    - "{{nfsen_src_dir}}/SURFmap/backend/*"
+    #    - "{{ nfsen_src_dir }}/SURFmap/backend/*"
       with_items:
-        - { s: "{{nfsen_src_dir}}/SURFmap/backend/SURFmap.pm", d: "{{ nfsen_vardir }}/plugins/SURFmap.pm" }
-        - { s: "{{nfsen_src_dir}}/SURFmap/backend/SURFmap", d: "{{ nfsen_vardir }}/plugins/SURFmap/RPC.pm" }
+        - { s: "{{ nfsen_src_dir }}/SURFmap/backend/SURFmap.pm", d: "{{ nfsen_vardir }}/plugins/SURFmap.pm" }
+        - { s: "{{ nfsen_src_dir }}/SURFmap/backend/SURFmap", d: "{{ nfsen_vardir }}/plugins/SURFmap/RPC.pm" }
   when: ansible_distribution_release == 'trusty'
-- block: 
+- block:
     - name: surfmap | install frontend files
       command: "rsync -r {{ item.s }} {{ nfsen_htmldir }}/plugins/ creates={{ item.d }}"
       with_items:
-        - { s: "{{nfsen_src_dir}}/SURFmap/frontend/SURFmap.php", d: "{{ nfsen_htmldir }}/plugins/SURFmap.php" }
-        - { s: "{{nfsen_src_dir}}/SURFmap/frontend/SURFmap", d: "{{ nfsen_htmldir }}/plugins/SURFmap/index.php" }
+        - { s: "{{ nfsen_src_dir }}/SURFmap/frontend/SURFmap.php", d: "{{ nfsen_htmldir }}/plugins/SURFmap.php" }
+        - { s: "{{ nfsen_src_dir }}/SURFmap/frontend/SURFmap", d: "{{ nfsen_htmldir }}/plugins/SURFmap/index.php" }
     - name: surfmap | install backend files
       command: "rsync -r {{ item.s }} {{ nfsen_vardir }}/plugins/ creates={{ item.d }}"
       with_items:
-        - { s: "{{nfsen_src_dir}}/SURFmap/backend/SURFmap.pm", d: "{{ nfsen_vardir }}/plugins/SURFmap.pm" }
-        - { s: "{{nfsen_src_dir}}/SURFmap/backend/SURFmap", d: "{{ nfsen_vardir }}/plugins/SURFmap/RPC.pm" }
+        - { s: "{{ nfsen_src_dir }}/SURFmap/backend/SURFmap.pm", d: "{{ nfsen_vardir }}/plugins/SURFmap.pm" }
+        - { s: "{{ nfsen_src_dir }}/SURFmap/backend/SURFmap", d: "{{ nfsen_vardir }}/plugins/SURFmap/RPC.pm" }
     - name: surfmap | validate frontend permissions
-      file: "dest={{nfsen_htmldir }}/plugins/SURFmap state=directory mode=0755 owner=root group={{ apache_user }} recurse=yes"
+      file: "dest={{ nfsen_htmldir }}/plugins/SURFmap state=directory mode=0755 owner=root group={{ apache_user }} recurse=yes"
     - name: surfmap | validate backend permissions
-      file: "dest={{nfsen_vardir}}/plugins/SURFmap state=directory mode=0755 owner={{ apache_user }} group={{ apache_user }} recurse=yes"
+      file: "dest={{ nfsen_vardir }}/plugins/SURFmap state=directory mode=0755 owner={{ apache_user }} group={{ apache_user }} recurse=yes"
   when: ansible_distribution_release != 'trusty'
 
 - name: surfmap | check directories exists

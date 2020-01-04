@@ -4,7 +4,7 @@
 
 # tasks file for nfsen
 - name: include os-specific variables
-  include_vars: "{{ansible_os_family}}.yml"
+  include_vars: "{{ ansible_os_family }}.yml"
 - name: Include version-specific variables for Ubuntu.
   include_vars: "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"
   when: ansible_distribution == 'Ubuntu'
@@ -19,18 +19,19 @@
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
 - name: install nfdump
-  package: name={{item}} state=present
-  with_items: "{{ nfsen_prereqs }}"
+  package:
+    name: "{{ nfsen_prereqs }}"
+    state: present
 
 - name: set php timezone in php.ini
-  lineinfile: >
-      dest={{ php_ini }}
-      regexp="^.?date.timezone = "
-      line="date.timezone = '{{nfsen_php_timezone}}'"
-      insertafter=EOF
+  lineinfile:
+    dest: "{{ php_ini }}"
+    regexp: "^.?date.timezone = "
+    line: "date.timezone = '{{ nfsen_php_timezone }}'"
+    insertafter: EOF
 
 - name: ensure nfsen user
-  user: name={{nfsen_user}} groups={{apache_user}} createhome=no
+  user: name={{ nfsen_user }} groups={{ apache_user }} createhome=no
 
 - name: deploy nfsen.conf
   template: src=nfsen.conf.j2 dest=/etc/nfsen.conf
@@ -38,37 +39,43 @@
   notify: reconfig nfsend
 
 - name: check if nfsen is installed
-  stat: path={{nfsen_bindir}}/nfsend
+  stat: path={{ nfsen_bindir }}/nfsend
   register: nfsen_stat
 
 - name: check for nfsen archive
-  stat: path={{nfsen_src_dir}}/{{nfsen_version}}.tar.gz
+  stat: path={{ nfsen_src_dir }}/{{ nfsen_version }}.tar.gz
   register: nfsen_archive_stat
 
 - name: get nfsen archive
   when: not nfsen_archive_stat.stat.exists
-  get_url: url={{nfsen_url}} dest={{nfsen_src_dir}}
+  get_url:
+    url: "{{ nfsen_url }}"
+    dest: "{{ nfsen_src_dir }}"
   register: nfsen_get_url
+  until: nfsen_get_url is success
 
 - name: extract nfsen archive
 ## FIXME! some case fails: FAILED! => {"failed": true, "msg": "file or module does not exist: /usr/local/src/nfsen-1.3.7.tar.gz"}
 #  unarchive: src={{nfsen_src_dir}}/{{nfsen_version}}.tar.gz dest={{nfsen_src_dir}}
   command: >
-      chdir={{nfsen_src_dir}}
-      creates={{nfsen_src_dir}}/{{nfsen_version}}
-      tar xzf {{nfsen_version}}.tar.gz
+    tar xzf {{ nfsen_version }}.tar.gz
+  args:
+    chdir: "{{ nfsen_src_dir }}"
+    creates: "{{ nfsen_src_dir }}/{{ nfsen_version }}"
 
 - name: copy nfsen install patch
   when: nfsen_get_url.changed or not nfsen_stat.stat.exists
   register: nfsen_patch
-  copy: >
-      src=nfsen-install-no-prompt.patch
-      dest={{nfsen_src_dir}}/{{nfsen_version}}/nfsen-install-no-prompt.patch
+  copy:
+    src: nfsen-install-no-prompt.patch
+    dest: "{{ nfsen_src_dir }}/{{ nfsen_version }}/nfsen-install-no-prompt.patch"
 
 - name: update install.pl to not prompt
   when: nfsen_patch.changed
-  shell: chdir={{nfsen_src_dir}}/{{nfsen_version}}
-         patch < nfsen-install-no-prompt.patch
+  shell: >
+    patch < nfsen-install-no-prompt.patch
+  args:
+    chdir: "{{ nfsen_src_dir }}/{{ nfsen_version }}"
 
 - name: create pid dir
   file: >
@@ -95,8 +102,9 @@
 - name: install nfsen
   when: nfsen_get_url.changed or not nfsen_stat.stat.exists
   command: >
-      chdir={{nfsen_src_dir}}/{{nfsen_version}}
       ./install.pl /etc/nfsen.conf
+  args:
+    chdir: "{{ nfsen_src_dir }}/{{ nfsen_version }}"
 ## Can not get semaphore:  at libexec/Nfsync.pm line 48.
 ## https://sourceforge.net/p/nfsen/mailman/message/32733916/
   ignore_errors: true
@@ -145,7 +153,7 @@
   register: macmeta
 - name: clean MacOSX meta files
   command: "find {{ nfsen_htmldir }} {{ nfsen_vardir }} -iname '._*' -exec rm \\{\\} \\;"
-  when: macmeta is defined and macmeta.stdout is defined and macmeta.stdout != ''
+  when: macmeta is defined and macmeta.stdout is defined and macmeta.stdout
 
 - name: enable debug mode for frontend
   replace: "dest={{ nfsen_htmldir }}/conf.php regexp='^$DEBUG=.*;' replace='$DEBUG={{ nfsen_frontend_enable_debug }};' backup=yes"

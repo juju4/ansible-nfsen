@@ -9,54 +9,58 @@
 - name: get nfsight archive
   get_url:
     url: "{{ nfsen_nfsight_url }}"
-    dest: "{{nfsen_src_dir}}/{{ nfsen_nfsight_url | basename }}"
+    dest: "{{ nfsen_src_dir }}/{{ nfsen_nfsight_url | basename }}"
     mode: 0644
     checksum: "{{ nfsen_nfsight_hash }}"
+  register: dl
+  until: dl is success
 
 - name: uncompress nfsight
-#  unarchive: "src={{nfsen_src_dir}}/nfsight-beta-20140905.tgz dest={{nfsen_src_dir}} creates={{nfsen_src_dir}}/nfsight-beta-20140905/backend/nfsight.pm"
+#  unarchive: "src={{ nfsen_src_dir }}/nfsight-beta-20140905.tgz dest={{ nfsen_src_dir }} creates={{ nfsen_src_dir }}/nfsight-beta-20140905/backend/nfsight.pm"
   command: >
-      chdir={{nfsen_src_dir}}
-      creates={{nfsen_src_dir}}/{{ nfsen_nfsight_dirname }}/backend/nfsight.pm
-      tar xzf {{nfsen_src_dir}}/{{ nfsen_nfsight_url | basename }}
+      tar xzf {{ nfsen_src_dir }}/{{ nfsen_nfsight_url | basename }}
+  args:
+    chdir: "{{ nfsen_src_dir }}"
+    creates: "{{ nfsen_src_dir }}/{{ nfsen_nfsight_dirname }}/backend/nfsight.pm"
 
 ## install mysql w separate role
 - name: nfsight | packages dependencies
-  package: name={{ item }} state=present
-  with_items: "{{ nfsen_nfsight_deps }}"
+  package:
+    name: "{{ nfsen_nfsight_deps }}"
+    state: present
 
-- block: 
+- block:
     - name: nfsight | install frontend files
     ## FIXME! 'Remote copy does not support recursive copy of directory' and synchronize not supporting remote_src=yes
-    #  copy: "src={{ item }} dest={{ nfsen_htmldir }}/plugins mode=0644 group={{apache_user}} remote_src=yes"
+    #  copy: "src={{ item }} dest={{ nfsen_htmldir }}/plugins mode=0644 group={{ apache_user }} remote_src=yes"
     ## FIXME! fileglob doing only files
     #  with_fileglob:
-    #    - "{{nfsen_src_dir}}/nfsight/frontend/*"
+    #    - "{{ nfsen_src_dir }}/nfsight/frontend/*"
     ## FIXME! centos7+precise rsync(3.0.9) has no chown/chmod option (ok trusty/rsync3.1)
       command: "rsync -r --chown=root:{{ apache_user }} --chmod=D0755,F0644 {{ item.s }} {{ nfsen_nfsight_htmldir }} creates={{ item.d }}"
       with_items:
-        - { s: "{{nfsen_src_dir}}/{{ nfsen_nfsight_dirname }}/frontend/", d: "{{ nfsen_nfsight_htmldir }}/index.php" }
+        - { s: "{{ nfsen_src_dir }}/{{ nfsen_nfsight_dirname }}/frontend/", d: "{{ nfsen_nfsight_htmldir }}/index.php" }
     - name: nfsight | install backend files
-    #  copy: "src={{ item }} dest={{ nfsen_vardir }}/plugins mode=0644 owner={{apache_user}} group={{apache_user}} remote_src=yes"
+    #  copy: "src={{ item }} dest={{ nfsen_vardir }}/plugins mode=0644 owner={{ apache_user }} group={{ apache_user }} remote_src=yes"
       command: "rsync -r --chown={{ apache_user }}:{{ apache_user }} --chmod=D0755,F0644 {{ item.s }} {{ nfsen_vardir }}/plugins/ creates={{ item.d }}"
     #  with_fileglob:
-    #    - "{{nfsen_src_dir}}/nfsight/backend/*"
+    #    - "{{ nfsen_src_dir }}/nfsight/backend/*"
       with_items:
-        - { s: "{{nfsen_src_dir}}/{{ nfsen_nfsight_dirname }}/backend/nfsight.pm", d: "{{ nfsen_vardir }}/plugins/nfsight.pm" }
+        - { s: "{{ nfsen_src_dir }}/{{ nfsen_nfsight_dirname }}/backend/nfsight.pm", d: "{{ nfsen_vardir }}/plugins/nfsight.pm" }
   when: ansible_distribution_release == 'trusty'
-- block: 
+- block:
     - name: nfsight | install frontend files
       command: "rsync -r {{ item.s }} {{ nfsen_nfsight_htmldir }} creates={{ item.d }}"
       with_items:
-        - { s: "{{nfsen_src_dir}}/{{ nfsen_nfsight_dirname }}/frontend/", d: "{{ nfsen_nfsight_htmldir }}/index.php" }
+        - { s: "{{ nfsen_src_dir }}/{{ nfsen_nfsight_dirname }}/frontend/", d: "{{ nfsen_nfsight_htmldir }}/index.php" }
     - name: nfsight | install backend files
       command: "rsync -r {{ item.s }} {{ nfsen_vardir }}/plugins/ creates={{ item.d }}"
       with_items:
-        - { s: "{{nfsen_src_dir}}/{{ nfsen_nfsight_dirname }}/backend/nfsight.pm", d: "{{ nfsen_vardir }}/plugins/nfsight.pm" }
+        - { s: "{{ nfsen_src_dir }}/{{ nfsen_nfsight_dirname }}/backend/nfsight.pm", d: "{{ nfsen_vardir }}/plugins/nfsight.pm" }
     - name: nfsight | validate frontend permissions
-      file: "dest={{nfsen_htmldir }}/plugins/nfsight state=directory mode=0755 owner=root group={{ apache_user }} recurse=yes"
+      file: "dest={{ nfsen_htmldir }}/plugins/nfsight state=directory mode=0755 owner=root group={{ apache_user }} recurse=yes"
     - name: nfsight | validate backend permissions
-      file: "dest={{nfsen_vardir}}/plugins/nfsight state=directory mode=0755 owner={{ apache_user }} group={{ apache_user }} recurse=yes"
+      file: "dest={{ nfsen_vardir }}/plugins/nfsight state=directory mode=0755 owner={{ apache_user }} group={{ apache_user }} recurse=yes"
   when: ansible_distribution_release != 'trusty'
 
 - name: nfsight | check directories exists
@@ -85,11 +89,15 @@
   mysql_db: name=nfsight state=present
 - name: create nfsight db user
   mysql_user: name=nfsight password={{ nfsen_nfsight_dbpass }} priv=nfsight.*:CREATE,DELETE,SELECT,INSERT,UPDATE state=present
-  when: nfsen_nfsight_dbpass is defined and nfsen_nfsight_dbpass != ''
+  when: nfsen_nfsight_dbpass is defined and nfsen_nfsight_dbpass
 
 ## TODO: manually create db instead of web install: frontend/sql/create_*.sql
 - name: nfsight | create schema.sql
-  shell: "cat {{ nfsen_nfsight_htmldir }}/sql/create_table_*.sql | sed 's/CHARSET=latin1$/CHARSET=latin1;/' > {{ nfsen_nfsight_htmldir }}/sql/schema.sql creates={{ nfsen_nfsight_htmldir }}/sql/schema.sql"
+  shell: >
+    cat {{ nfsen_nfsight_htmldir }}/sql/create_table_*.sql |
+        sed 's/CHARSET=latin1$/CHARSET=latin1;/' > {{ nfsen_nfsight_htmldir }}/sql/schema.sql
+  args:
+    creates: "{{ nfsen_nfsight_htmldir }}/sql/schema.sql"
 - name: nfsight | import schema.sql
 #  mysql_db: "state=import name=nfsight target={{ nfsen_nfsight_htmldir }}/sql/schema.sql login_user=nfsight login_password={{ nfsen_nfsight_dbpass }}"
   shell: "mysql nfsight < {{ nfsen_nfsight_htmldir }}/sql/schema.sql"
