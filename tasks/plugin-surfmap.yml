@@ -81,4 +81,3 @@
     - { re: '^\$config\[.map_center.\] = ".*";', rep: "$config['map_center'] = '{{ nfsen_plugin_surfmap_map_center }}';" }
     - { re: '^\$config\[.internal_domains.\] = .*;', rep: "$config['internal_domains'] = '{{ nfsen_plugin_surfmap_internal_domains }}';" }
 #    - { re: '^', rep: '' }
-

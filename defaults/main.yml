@@ -129,4 +129,3 @@ nfsen_surfmap_hash: 'sha256:42d458e01b9623866392b210e9daef408e13c0f885d1072869e6
 scriptsdir: /usr/local/bin
 backupdir: /var/_backup
 nfsen_monitoring_nrpe: true
-

@@ -21,4 +21,3 @@
         chdir: "{{ scriptsdir }}"
       with_items: "{{ nfsen_channels }}"
   when: nfsen_channels != []
-

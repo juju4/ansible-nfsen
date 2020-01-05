@@ -1,5 +1,7 @@
 ---
-- fail: msg="This role is not compatible with Ubuntu xenial - nfsen does not support RRDs.pm 1.5+"
+
+- name: Compatibility check
+  fail: msg="This role is not compatible with Ubuntu xenial - nfsen does not support RRDs.pm 1.5+"
   when: ansible_distribution == 'Ubuntu' and ansible_distribution_release == 'xenial'
 
 # tasks file for nfsen
@@ -192,4 +194,3 @@
 - include: backup-restore.yml
 - include: monitoring-nrpe.yml
   when: nfsen_monitoring_nrpe is defined and nfsen_monitoring_nrpe
-

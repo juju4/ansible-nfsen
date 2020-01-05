@@ -6,4 +6,3 @@ nfsen_services:
   - "{{ apache_svc }}"
 ## nfdump/nfcapd is controlled by nfsen
 #  - nfdump
-
